@@ -1,14 +1,293 @@
-'use client';
-import { useEffect,useRef,useState } from 'react';
-import { Plus, MessageCircle, Send, Sparkles, ShieldCheck, ArrowRight, Flower2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { api, Message, ChatHistory, Assignment, DEMO_MESSAGE } from '@/lib/api';
-import { Badge } from './common';
-import { Button } from './ui/button';
-import { ExerciseRunner } from './patient';
-export function Chat(){const [history,setHistory]=useState<ChatHistory>({sessions:[],messages:[]});const [session,setSession]=useState<number>();const [text,setText]=useState('');const [busy,setBusy]=useState(false);const [loading,setLoading]=useState(false);const [assignments,setAssignments]=useState<Assignment[]>([]);const [active,setActive]=useState<Assignment|null>(null);const end=useRef<HTMLDivElement>(null);
-const refreshExercises=()=>api<Assignment[]>('/exercises').then(a=>setAssignments(a.filter(x=>x.available))).catch(e=>toast.error(e.message));
-useEffect(()=>{let live=true;setLoading(true);api<ChatHistory>('/chat/history'+(session?'?session_id='+session:'')).then(h=>{if(live)setHistory(h)}).catch(e=>toast.error(e.message)).finally(()=>{if(live)setLoading(false)});return()=>{live=false}},[session]);
-useEffect(()=>{refreshExercises()},[]);useEffect(()=>{end.current?.scrollIntoView({behavior:'smooth',block:'nearest'})},[history.messages,busy]);
-async function send(value:string){if(busy||!value.trim())return;setBusy(true);try{const reply=await api<{session_id:number;message:Message;safety:string|null;assignments:Assignment[]}>('/chat/messages','POST',{content:value,session_id:session??null});setText('');if(session===reply.session_id){setHistory(h=>({...h,messages:[...h.messages,{id:-Date.now(),role:'user',content:value,created_at:new Date().toISOString()},reply.message]}))}else setSession(reply.session_id);setAssignments(reply.safety?[]:reply.assignments.map(a=>({...a,available:true})));}catch(e){toast.error((e as Error).message)}finally{setBusy(false)}}
-return <><div className="chat-layout"><aside className="chat-history"><div className="section-title"><h3>Разговоры</h3><button className="icon-button" disabled={busy} aria-label="Новый диалог" onClick={()=>{setSession(undefined);setHistory(h=>({...h,messages:[]}));refreshExercises()}}><Plus size={20}/></button></div><Button variant="secondary" disabled={busy} onClick={()=>{setSession(undefined);setHistory(h=>({...h,messages:[]}));refreshExercises()}}><Plus size={16}/> Новый разговор</Button><small className="history-label">ВАШЕ ПРОСТРАНСТВО</small>{history.sessions.length?history.sessions.map(s=><button key={s.id} disabled={busy} className={'history-item '+(session===s.id?'active':'')} onClick={()=>setSession(s.id)}><MessageCircle size={15}/><span>{s.title}</span></button>):<p className="muted">Здесь появятся ваши разговоры.</p>}<div className="chat-privacy"><ShieldCheck size={18}/><p>Переписка доступна только вам. Психолог видит лишь разрешённые данные.</p></div></aside><section className="chat-main"><header><div className="row"><span className="chat-avatar"><Flower2 size={24}/></span><div><h3>Ваш ИИ-компаньон</h3><small><span className="status-dot"/> Здесь, чтобы выслушать</small></div></div><Badge>В вашем темпе</Badge></header><div className="messages">{!history.messages.length&&!loading?<div className="chat-welcome"><div className="welcome-symbol"><Flower2 size={44}/></div><div className="eyebrow">МОЖНО ПРОСТО БЫТЬ СОБОЙ</div><h1>О чём хочется<br/>поговорить?</h1><p>О том, что тревожит. О маленькой победе.<br/>Или о дне, который был непростым.</p><button className="demo-prompt" onClick={()=>send(DEMO_MESSAGE)}><Sparkles size={18}/><span><b>Попробовать демонстрационный сценарий</b><small>«Мне снова тревожно из-за работы…»</small></span><ArrowRight size={17}/></button></div>:history.messages.map(m=><div key={m.id} className={'message '+m.role}>{m.role==='assistant'&&<span className="chat-avatar"><Flower2 size={19}/></span>}<div><div className="message-label">{m.role==='assistant'?'MINDPRINT':'Вы'}</div><p>{m.content}</p></div></div>)}{busy&&<div className="message assistant"><span className="chat-avatar"><Flower2 size={19}/></span><div className="typing" aria-label="Генерация ответа"><i/><i/><i/></div></div>}<div ref={end}/></div>{assignments.length>0&&history.messages.length>0&&<div className="chat-assignments">{assignments.slice(0,3).map(a=><button key={a.id} onClick={()=>setActive(a)}><span>Из вашего плана</span>{a.exercise.name}<ArrowRight size={14}/></button>)}</div>}<div className="chat-composer"><div className="quick-actions">{['Мне тревожно','Хочу поговорить','Выполнить упражнение','Подвести итоги дня'].map(v=><button disabled={busy||loading} key={v} onClick={()=>send(v)}>{v}</button>)}</div><form onSubmit={e=>{e.preventDefault();send(text)}}><textarea aria-label="Сообщение ИИ" placeholder="Напишите, что сейчас чувствуете…" value={text} maxLength={4000} onChange={e=>setText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(text)}}}/><Button aria-label="Отправить сообщение" disabled={busy||loading||!text.trim()}><Send size={18}/></Button></form><small>ИИ может ошибаться. MINDPRINT AI не является службой экстренной психологической помощи.</small></div></section></div><ExerciseRunner assignment={active} onClose={()=>setActive(null)} onUpdate={refreshExercises}/></>;}
+"use client";
+import { useEffect, useRef, useState } from "react";
+import {
+  Plus,
+  MessageCircle,
+  Send,
+  Sparkles,
+  ShieldCheck,
+  ArrowRight,
+  Flower2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { api, Message, ChatHistory, Assignment, DEMO_MESSAGE } from "@/lib/api";
+import { Badge } from "./common";
+import { Button } from "./ui/button";
+import { ExerciseRunner } from "./patient";
+export function Chat() {
+  const [history, setHistory] = useState<ChatHistory>({
+    sessions: [],
+    messages: [],
+  });
+  const [session, setSession] = useState<number>();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [active, setActive] = useState<Assignment | null>(null);
+  const end = useRef<HTMLDivElement>(null);
+  const refreshExercises = () =>
+    api<Assignment[]>("/exercises")
+      .then((a) => setAssignments(a.filter((x) => x.available)))
+      .catch((e) => toast.error(e.message));
+  useEffect(() => {
+    let live = true;
+    setLoading(true);
+    api<ChatHistory>(
+      "/chat/history" + (session ? "?session_id=" + session : ""),
+    )
+      .then((h) => {
+        if (live) setHistory(h);
+      })
+      .catch((e) => toast.error(e.message))
+      .finally(() => {
+        if (live) setLoading(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [session]);
+  useEffect(() => {
+    refreshExercises();
+  }, []);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [history.messages, busy]);
+  async function send(value: string) {
+    if (busy || !value.trim()) return;
+    setBusy(true);
+    try {
+      const reply = await api<{
+        session_id: number;
+        message: Message;
+        safety: string | null;
+        assignments: Assignment[];
+      }>("/chat/messages", "POST", {
+        content: value,
+        session_id: session ?? null,
+      });
+      setText("");
+      if (session === reply.session_id) {
+        setHistory((h) => ({
+          ...h,
+          messages: [
+            ...h.messages,
+            {
+              id: -Date.now(),
+              role: "user",
+              content: value,
+              created_at: new Date().toISOString(),
+            },
+            reply.message,
+          ],
+        }));
+      } else setSession(reply.session_id);
+      setAssignments(
+        reply.safety
+          ? []
+          : reply.assignments.map((a) => ({ ...a, available: true })),
+      );
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <>
+      <div className="chat-layout">
+        <aside className="chat-history">
+          <div className="section-title">
+            <h3>Разговоры</h3>
+            <button
+              className="icon-button"
+              disabled={busy}
+              aria-label="Новый диалог"
+              onClick={() => {
+                setSession(undefined);
+                setHistory((h) => ({ ...h, messages: [] }));
+                refreshExercises();
+              }}
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => {
+              setSession(undefined);
+              setHistory((h) => ({ ...h, messages: [] }));
+              refreshExercises();
+            }}
+          >
+            <Plus size={16} /> Новый разговор
+          </Button>
+          <small className="history-label">ВАШЕ ПРОСТРАНСТВО</small>
+          {history.sessions.length ? (
+            history.sessions.map((s) => (
+              <button
+                key={s.id}
+                disabled={busy}
+                className={"history-item " + (session === s.id ? "active" : "")}
+                onClick={() => setSession(s.id)}
+              >
+                <MessageCircle size={15} />
+                <span>{s.title}</span>
+              </button>
+            ))
+          ) : (
+            <p className="muted">Здесь появятся ваши разговоры.</p>
+          )}
+          <div className="chat-privacy">
+            <ShieldCheck size={18} />
+            <p>
+              Переписка доступна только вам. Психолог видит лишь разрешённые
+              данные.
+            </p>
+          </div>
+        </aside>
+        <section className="chat-main">
+          <header>
+            <div className="row">
+              <span className="chat-avatar">
+                <Flower2 size={24} />
+              </span>
+              <div>
+                <h3>Ваш ИИ-компаньон</h3>
+                <small>
+                  <span className="status-dot" /> Здесь, чтобы выслушать
+                </small>
+              </div>
+            </div>
+            <Badge>В вашем темпе</Badge>
+          </header>
+          <div className="messages">
+            {!history.messages.length && !loading ? (
+              <div className="chat-welcome">
+                <div className="welcome-symbol">
+                  <Flower2 size={44} />
+                </div>
+                <div className="eyebrow">МОЖНО ПРОСТО БЫТЬ СОБОЙ</div>
+                <h1>
+                  О чём хочется
+                  <br />
+                  поговорить?
+                </h1>
+                <p>
+                  О том, что тревожит. О маленькой победе.
+                  <br />
+                  Или о дне, который был непростым.
+                </p>
+                <button
+                  className="demo-prompt"
+                  onClick={() => send(DEMO_MESSAGE)}
+                >
+                  <Sparkles size={18} />
+                  <span>
+                    <b>Попробовать демонстрационный сценарий</b>
+                    <small>«Мне снова тревожно из-за работы…»</small>
+                  </span>
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            ) : (
+              history.messages.map((m) => (
+                <div key={m.id} className={"message " + m.role}>
+                  {m.role === "assistant" && (
+                    <span className="chat-avatar">
+                      <Flower2 size={19} />
+                    </span>
+                  )}
+                  <div>
+                    <div className="message-label">
+                      {m.role === "assistant" ? "MINDPRINT" : "Вы"}
+                    </div>
+                    <p>{m.content}</p>
+                  </div>
+                </div>
+              ))
+            )}
+            {busy && (
+              <div className="message assistant">
+                <span className="chat-avatar">
+                  <Flower2 size={19} />
+                </span>
+                <div className="typing" aria-label="Генерация ответа">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+            )}
+            <div ref={end} />
+          </div>
+          {assignments.length > 0 && history.messages.length > 0 && (
+            <div className="chat-assignments">
+              {assignments.slice(0, 3).map((a) => (
+                <button key={a.id} onClick={() => setActive(a)}>
+                  <span>Из вашего плана</span>
+                  {a.exercise.name}
+                  <ArrowRight size={14} />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="chat-composer">
+            <div className="quick-actions">
+              {[
+                "Мне тревожно",
+                "Хочу поговорить",
+                "Выполнить упражнение",
+                "Подвести итоги дня",
+              ].map((v) => (
+                <button
+                  disabled={busy || loading}
+                  key={v}
+                  onClick={() => send(v)}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(text);
+              }}
+            >
+              <textarea
+                aria-label="Сообщение ИИ"
+                placeholder="Напишите, что сейчас чувствуете…"
+                value={text}
+                maxLength={4000}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send(text);
+                  }
+                }}
+              />
+              <Button
+                aria-label="Отправить сообщение"
+                disabled={busy || loading || !text.trim()}
+              >
+                <Send size={18} />
+              </Button>
+            </form>
+            <small>
+              ИИ может ошибаться. MINDPRINT AI не является службой экстренной
+              психологической помощи.
+            </small>
+          </div>
+        </section>
+      </div>
+      <ExerciseRunner
+        assignment={active}
+        onClose={() => setActive(null)}
+        onUpdate={refreshExercises}
+      />
+    </>
+  );
+}

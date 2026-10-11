@@ -1,13 +1,211 @@
-'use client';
-import { AreaChart,Area,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,BarChart,Bar } from 'recharts';
-import { ArrowUpRight, Flower2, Sparkles, FileText } from 'lucide-react';
-import { Analytics, date } from '@/lib/api';
-export function Logo(){return <span className="brand"><span className="brand-icon"><Flower2 size={25}/></span><span>MINDPRINT<span className="brand-ai"> AI</span></span></span>;}
-export function Badge({children,tone='purple'}:{children:React.ReactNode;tone?:string}){return <span className={'badge '+tone}>{children}</span>;}
-export function Empty({title='Пока ничего нет',text='Здесь появятся ваши данные после первого действия.'}:{title?:string;text?:string}){return <div className="empty"><FileText size={28}/><h3>{title}</h3><p>{text}</p></div>;}
-export function Loading(){return <div className="loading-grid"><div className="skeleton skeleton-heading"/>{[1,2,3,4].map(i=><div className="skeleton" key={i}/>)}</div>;}
-export function Heading({eyebrow,title,subtitle,actions}:{eyebrow?:string;title:string;subtitle?:string;actions?:React.ReactNode}){return <div className="page-heading"><div>{eyebrow&&<div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{subtitle&&<p>{subtitle}</p>}</div><div className="heading-actions">{actions}</div></div>;}
-export function Metric({label,value,detail,icon}:{label:string;value:React.ReactNode;detail:string;icon:React.ReactNode}){return <div className="metric card"><div className="row between"><span>{label}</span><span className="metric-icon">{icon}</span></div><strong>{value}</strong><small>{detail}</small></div>;}
-export function MoodChart({data,height=240,entries=false}:{data:Analytics['series'];height?:number;entries?:boolean}){if(!data.length)return <Empty title="Недостаточно данных" text="Отметьте настроение или добавьте запись в дневник."/>;return <div style={{height,width:'100%'}}><ResponsiveContainer width="100%" height="100%">{entries?<BarChart data={data}><CartesianGrid vertical={false} stroke="#edeef5"/><XAxis dataKey="date" tickFormatter={date} tickLine={false} axisLine={false} tick={{fontSize:11,fill:'#8d8fa0'}}/><YAxis allowDecimals={false} width={25} tickLine={false} axisLine={false}/><Tooltip labelFormatter={v=>date(String(v))}/><Bar dataKey="entries" name="Записи" fill="#b6b0f4" radius={[6,6,0,0]}/></BarChart>:<AreaChart data={data} margin={{top:10,right:12,left:-20,bottom:0}}><defs><linearGradient id="moodFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#8b80ed" stopOpacity={0.23}/><stop offset="100%" stopColor="#8b80ed" stopOpacity={0.01}/></linearGradient></defs><CartesianGrid vertical={false} stroke="#edeef5" strokeDasharray="3 4"/><XAxis dataKey="date" tickFormatter={date} tickLine={false} axisLine={false} minTickGap={22} tick={{fontSize:11,fill:'#8d8fa0'}}/><YAxis domain={[1,5]} ticks={[1,2,3,4,5]} tickLine={false} axisLine={false} tick={{fontSize:11,fill:'#8d8fa0'}}/><Tooltip contentStyle={{borderRadius:12,border:'1px solid #e9eaf0'}} labelFormatter={v=>date(String(v))}/><Area type="monotone" dataKey="mood" name="Настроение" stroke="#8073e5" strokeWidth={3} fill="url(#moodFill)" dot={{r:3,fill:'#fff',strokeWidth:2}} activeDot={{r:6}}/></AreaChart>}</ResponsiveContainer></div>;}
-export function AIInfo(){return <div className="ai-footnote"><Sparkles size={14}/> AI-наблюдения — гипотезы для обсуждения, не диагноз.</div>;}
-export function Arrow(){return <ArrowUpRight size={16}/>;}
+"use client";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
+import { ArrowUpRight, Flower2, Sparkles, FileText } from "lucide-react";
+import { Analytics, date } from "@/lib/api";
+export function Logo() {
+  return (
+    <span className="brand">
+      <span className="brand-icon">
+        <Flower2 size={25} />
+      </span>
+      <span>
+        MINDPRINT<span className="brand-ai"> AI</span>
+      </span>
+    </span>
+  );
+}
+export function Badge({
+  children,
+  tone = "purple",
+}: {
+  children: React.ReactNode;
+  tone?: string;
+}) {
+  return <span className={"badge " + tone}>{children}</span>;
+}
+export function Empty({
+  title = "Пока ничего нет",
+  text = "Здесь появятся ваши данные после первого действия.",
+}: {
+  title?: string;
+  text?: string;
+}) {
+  return (
+    <div className="empty">
+      <FileText size={28} />
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </div>
+  );
+}
+export function Loading() {
+  return (
+    <div className="loading-grid">
+      <div className="skeleton skeleton-heading" />
+      {[1, 2, 3, 4].map((i) => (
+        <div className="skeleton" key={i} />
+      ))}
+    </div>
+  );
+}
+export function Heading({
+  eyebrow,
+  title,
+  subtitle,
+  actions,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="page-heading">
+      <div>
+        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      <div className="heading-actions">{actions}</div>
+    </div>
+  );
+}
+export function Metric({
+  label,
+  value,
+  detail,
+  icon,
+}: {
+  label: string;
+  value: React.ReactNode;
+  detail: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="metric card">
+      <div className="row between">
+        <span>{label}</span>
+        <span className="metric-icon">{icon}</span>
+      </div>
+      <strong>{value}</strong>
+      <small>{detail}</small>
+    </div>
+  );
+}
+export function MoodChart({
+  data,
+  height = 240,
+  entries = false,
+}: {
+  data: Analytics["series"];
+  height?: number;
+  entries?: boolean;
+}) {
+  if (!data.length)
+    return (
+      <Empty
+        title="Недостаточно данных"
+        text="Отметьте настроение или добавьте запись в дневник."
+      />
+    );
+  return (
+    <div style={{ height, width: "100%" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {entries ? (
+          <BarChart data={data}>
+            <CartesianGrid vertical={false} stroke="#edeef5" />
+            <XAxis
+              dataKey="date"
+              tickFormatter={date}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11, fill: "#8d8fa0" }}
+            />
+            <YAxis
+              allowDecimals={false}
+              width={25}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip labelFormatter={(v) => date(String(v))} />
+            <Bar
+              isAnimationActive={false}
+              dataKey="entries"
+              name="Записи"
+              fill="#b6b0f4"
+              radius={[6, 6, 0, 0]}
+            />
+          </BarChart>
+        ) : (
+          <AreaChart
+            data={data}
+            margin={{ top: 10, right: 12, left: -20, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="moodFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8b80ed" stopOpacity={0.23} />
+                <stop offset="100%" stopColor="#8b80ed" stopOpacity={0.01} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              vertical={false}
+              stroke="#edeef5"
+              strokeDasharray="3 4"
+            />
+            <XAxis
+              dataKey="date"
+              tickFormatter={date}
+              tickLine={false}
+              axisLine={false}
+              minTickGap={22}
+              tick={{ fontSize: 11, fill: "#8d8fa0" }}
+            />
+            <YAxis
+              domain={[1, 5]}
+              ticks={[1, 2, 3, 4, 5]}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 11, fill: "#8d8fa0" }}
+            />
+            <Tooltip
+              contentStyle={{ borderRadius: 12, border: "1px solid #e9eaf0" }}
+              labelFormatter={(v) => date(String(v))}
+            />
+            <Area
+              isAnimationActive={false}
+              type="monotone"
+              dataKey="mood"
+              name="Настроение"
+              stroke="#8073e5"
+              strokeWidth={3}
+              fill="url(#moodFill)"
+              dot={{ r: 3, fill: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
+            />
+          </AreaChart>
+        )}
+      </ResponsiveContainer>
+    </div>
+  );
+}
+export function AIInfo() {
+  return (
+    <div className="ai-footnote">
+      <Sparkles size={14} /> AI-наблюдения — гипотезы для обсуждения, не
+      диагноз.
+    </div>
+  );
+}
+export function Arrow() {
+  return <ArrowUpRight size={16} />;
+}

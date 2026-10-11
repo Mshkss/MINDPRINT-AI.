@@ -1,1 +1,36 @@
-{"name":"mindprint","version":"0.1.0","private":true,"scripts":{"dev":"next dev --hostname 0.0.0.0","build":"next build","start":"next start --hostname 0.0.0.0","typecheck":"tsc --noEmit"},"dependencies":{"@radix-ui/react-dialog":"^1.1.0","@radix-ui/react-slot":"^1.1.0","@tailwindcss/postcss":"^4.1.0","class-variance-authority":"^0.7.1","clsx":"^2.1.1","lucide-react":"^0.468.0","next":"^15.5.0","react":"^19.1.0","react-dom":"^19.1.0","recharts":"^2.15.0","sonner":"^2.0.0","tailwind-merge":"^3.0.0","tailwindcss":"^4.1.0"},"devDependencies":{"@playwright/test":"^1.51.0","@types/node":"^22","@types/react":"^19","@types/react-dom":"^19","typescript":"^5.7.0"},"overrides":{"postcss":"^8.5.23"}}
+{
+  "name": "mindprint",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^2.15.0",
+    "sonner": "^2.0.0",
+    "tailwind-merge": "^3.0.0",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.7.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
+  }
+}

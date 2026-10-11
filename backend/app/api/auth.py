@@ -9,18 +9,21 @@ from app.core.security import current_user, issue_session, hasher, digest
 from app.models import User, AuthSession
 from app.schemas import Login, DemoLogin
 from app.repositories import public_user
+
 router = APIRouter()
 attempts = defaultdict(list)
 
+
 def throttle(request):
-    key = request.client.host if request.client else 'unknown'
+    key = request.client.host if request.client else "unknown"
     now = time.monotonic()
-    attempts[key] = [t for t in attempts[key] if now-t < 60]
+    attempts[key] = [t for t in attempts[key] if now - t < 60]
     if len(attempts[key]) >= 15:
-        raise HTTPException(429, 'Слишком много попыток. Подождите минуту.')
+        raise HTTPException(429, "Слишком много попыток. Подождите минуту.")
     attempts[key].append(now)
 
-@router.post('/auth/login')
+
+@router.post("/auth/login")
 async def login(data: Login, request: Request, response: Response, db=Depends(get_db)):
     throttle(request)
     user = await db.scalar(select(User).where(User.email == data.email.strip().lower()))
@@ -31,32 +34,47 @@ async def login(data: Login, request: Request, response: Response, db=Depends(ge
         except VerificationError:
             pass
     if not valid:
-        raise HTTPException(401, 'Неверный email или пароль')
+        raise HTTPException(401, "Неверный email или пароль")
     await issue_session(db, user, response)
     return public_user(user)
 
-@router.post('/auth/demo')
-async def demo(data: DemoLogin, request: Request, response: Response, db=Depends(get_db)):
+
+@router.post("/auth/demo")
+async def demo(
+    data: DemoLogin, request: Request, response: Response, db=Depends(get_db)
+):
     throttle(request)
     if not settings().demo_mode:
-        raise HTTPException(404, 'Демонстрационный вход выключен')
-    user = await db.scalar(select(User).where(User.email == f'{data.role}@mindprint.demo', User.synthetic.is_(True)))
+        raise HTTPException(404, "Демонстрационный вход выключен")
+    user = await db.scalar(
+        select(User).where(
+            User.email == f"{data.role}@mindprint.demo", User.synthetic.is_(True)
+        )
+    )
     if not user:
-        raise HTTPException(404, 'Демоаккаунт отсутствует')
+        raise HTTPException(404, "Демоаккаунт отсутствует")
     await issue_session(db, user, response)
     return public_user(user)
 
-@router.post('/auth/logout')
-async def logout(request: Request, response: Response, db=Depends(get_db)):
-    await db.execute(delete(AuthSession).where(AuthSession.token_hash == digest(request.cookies.get('mindprint_session',''))))
-    await db.commit()
-    response.delete_cookie('mindprint_session', path='/')
-    return {'ok':True}
 
-@router.get('/me')
+@router.post("/auth/logout")
+async def logout(request: Request, response: Response, db=Depends(get_db)):
+    await db.execute(
+        delete(AuthSession).where(
+            AuthSession.token_hash
+            == digest(request.cookies.get("mindprint_session", ""))
+        )
+    )
+    await db.commit()
+    response.delete_cookie("mindprint_session", path="/")
+    return {"ok": True}
+
+
+@router.get("/me")
 async def me(user=Depends(current_user)):
     return public_user(user)
 
-@router.get('/config')
+
+@router.get("/config")
 async def config():
-    return {'demo_mode':settings().demo_mode,'ai_provider':settings().ai_provider}
+    return {"demo_mode": settings().demo_mode, "ai_provider": settings().ai_provider}
