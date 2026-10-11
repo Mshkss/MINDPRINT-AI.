@@ -19,7 +19,7 @@ docker compose up -d --build
 - API: http://localhost:8000
 - Swagger: http://localhost:8000/docs
 
-Порты приложения привязаны к `127.0.0.1`. PostgreSQL доступен только внутри сети Docker. Если 3000 или 8000 заняты, поменяйте левую часть соответствующей привязки в Compose; при смене frontend-порта также обновите `ALLOWED_ORIGINS` в `backend/.env`.
+Порты приложения привязаны к `127.0.0.1`. PostgreSQL доступен только внутри сети Docker. Если 3000 или 8000 заняты, поменяйте левую часть соответствующей привязки в Compose. Для другого публичного адреса задайте точные origin через `ALLOWED_ORIGINS` в корневом `.env`, например `ALLOWED_ORIGINS=https://example.ru`; список нескольких origin разделяйте запятыми.
 
 ```bash
 docker compose ps

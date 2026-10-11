@@ -19,6 +19,7 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://mindprint:${POSTGRES_PASSWORD:-mindprint-local-demo}@db:5432/mindprint
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://anatolii-botov.ru:3000}"
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -34,7 +35,7 @@ services:
     environment:
       BACKEND_URL: http://backend:8000
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     depends_on:
       backend:
         condition: service_healthy
